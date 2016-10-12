@@ -14,7 +14,7 @@ var api = new ParseServer({
     restAPIKey: "master",
     clientKey: "master",
     masterKey: process.env.MASTER_KEY || 'master', //Add your master key here. Keep it secret!
-    serverURL: process.env.SERVER_URL || 'http://localhost:1337/parse',  // Don't forget to change to https if needed
+    serverURL: process.env.SERVER_URL || 'https://env-9969828.j.layershift.co.uk',  // Don't forget to change to https if needed
     liveQuery: {
         classNames: ["Posts", "Comments"] // List of classes to support for query subscriptions
     },
@@ -54,13 +54,18 @@ app.get('/', function (req, res) {
 var dashboard = new ParseDashboard({
     "apps": [
         {
-            "serverURL": "http://localhost:1337/parse",
+            "serverURL": "https://env-9969828.j.layershift.co.uk/parse",
             "appId": "myAppId",
             "masterKey": "master",
             "appName": "MyApp"
         }
+    ], "users": [
+        {
+            "user": "admin",
+            "pass": "123456789"
+        }
     ]
-});
+}, true);
 app.use('/dashboard', dashboard);
 
 
