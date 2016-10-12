@@ -1,0 +1,1 @@
+{"error":{"code":200,"message":"bad or missing username"},"level":"error","message":"Error generating response. ParseError { code: 200, message: 'bad or missing username' }","timestamp":"2016-09-24T01:20:41.153Z"}
