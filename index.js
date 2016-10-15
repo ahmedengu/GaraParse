@@ -54,7 +54,7 @@ app.get('/', function (req, res) {
 var dashboard = new ParseDashboard({
     "apps": [
         {
-            "serverURL": "https://env-9969828.j.layershift.co.uk/parse",
+            "serverURL": process.env.SERVER_URL||  "https://env-9969828.j.layershift.co.uk/parse",
             "appId": "myAppId",
             "masterKey": "master",
             "appName": "MyApp"
