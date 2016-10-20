@@ -21,11 +21,6 @@ var api = new ParseServer({
     websocketTimeout: 10 * 1000,
     cacheTimeout: 60 * 600 * 1000,
     logLevel: 'VERBOSE',
-    oauth: {
-        facebook: {
-            appIds: "272167913140392"
-        }
-    },
     revokeSessionOnPasswordReset: true,
     accountLockout: {
         duration: 5,
