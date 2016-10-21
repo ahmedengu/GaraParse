@@ -1,0 +1,4 @@
+{"level":"error","message":"Connect message error Missing required property: applicationId","timestamp":"2016-10-21T19:57:40.146Z"}
+{"level":"error","message":"Connect message error Missing required property: where","timestamp":"2016-10-21T20:01:50.794Z"}
+{"level":"error","message":"Connect message error Invalid type: number (expected object)","timestamp":"2016-10-21T20:02:07.283Z"}
+{"level":"error","message":"Can not find this client, make sure you connect to server before subscribing","timestamp":"2016-10-21T20:10:13.774Z"}

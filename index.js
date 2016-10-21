@@ -16,7 +16,7 @@ var api = new ParseServer({
     masterKey: process.env.MASTER_KEY || 'master', //Add your master key here. Keep it secret!
     serverURL: process.env.SERVER_URL || 'https://env-9969828.j.layershift.co.uk',  // Don't forget to change to https if needed
     liveQuery: {
-        classNames: ["Posts", "Comments"] // List of classes to support for query subscriptions
+        classNames: ["Trip", "TripRequest","Chat","Message"] // List of classes to support for query subscriptions
     },
     websocketTimeout: 10 * 1000,
     cacheTimeout: 60 * 600 * 1000,
