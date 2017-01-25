@@ -111,7 +111,7 @@
 // }
 
 
-var api_key = 'garaKey-13bc415257919ddaa5197a964611c86a';
+var api_key = 'key-13bc415257919ddaa5197a964611c86a';
 var domain = 'g-ara.com';
 var mailgun = require('mailgun-js')({apiKey: api_key, domain: domain});
 var CryptoJS = require("crypto-js");
@@ -125,14 +125,12 @@ Parse.Cloud.afterSave("GroupUser", function (request) {
             from: 'Gara <postmaster@g-ara.com>',
             to: request.object.get('email'),
             subject: 'Verify group',
-            text: 'http://app.g-ara.com/verifyGroup/' + request.object.get('email') + '/' + ciphertext.toString()
+            text: 'https://gara-app.back4app.io/verifyGroupEmail.html?email=' + encodeURIComponent(request.object.get('email')) + '&token=' + encodeURIComponent(ciphertext.toString())
         };
 
         mailgun.messages().send(data, function (error, body) {
-            console.log(body);
             console.log(error);
         });
-        console.log(request);
     }
 });
 

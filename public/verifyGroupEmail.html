@@ -1,0 +1,93 @@
+<html>
+<head>
+    <title>Gara | Verify Group</title>
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script>
+        Parse.initialize("GBTIGT2xXUlBHF8ctBXoyEO7nIL18jvwQNyl3gkD", "C6mXBN3o7axHaqUsWoOQzCX73KdnDYncfVZrjcX8");
+        Parse.serverURL = 'https://gara-app.back4app.io';
+        var email = getParameterByName('email');
+        var token = getParameterByName('token');
+        console.log(email);
+        console.log(token);
+        Parse.Cloud.run('verifyGroup', {'email': email, 'token': token}, {
+            success: function (result) {
+                $('#response').text(result);
+            },
+            error: function (error) {
+                $('#response').text(error.message);
+            }
+        });
+        function getParameterByName(name, url) {
+            if (!url) {
+                url = window.location.href;
+            }
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+    </script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1 0 auto;
+        }
+
+        body {
+            background: #fff;
+        }
+
+        .input-field input[type=date]:focus + label,
+        .input-field input[type=text]:focus + label,
+        .input-field input[type=email]:focus + label,
+        .input-field input[type=password]:focus + label {
+            color: #e91e63;
+        }
+
+        .input-field input[type=date]:focus,
+        .input-field input[type=text]:focus,
+        .input-field input[type=email]:focus,
+        .input-field input[type=password]:focus {
+            border-bottom: 2px solid #e91e63;
+            box-shadow: none;
+        }
+    </style>
+</head>
+
+<body style="background: #fbfbfb;">
+<div class="section"></div>
+<main>
+    <div style="text-align: center;">
+        <img class="responsive-img" style="width: 250px;" src="http://www.g-ara.com/assets/images/logo.png"/>
+        <div class="section"></div>
+
+        <div class="section"></div>
+
+        <div class="container">
+            <div class="z-depth-1 grey lighten-4 row"
+                 style="display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE;">
+                <h3 id="response">Loading ...</h3>
+                <br>
+            </div>
+        </div>
+    </div>
+
+    <div class="section"></div>
+    <div class="section"></div>
+</main>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+</body>
+
+</html>
