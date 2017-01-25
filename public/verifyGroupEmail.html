@@ -1,14 +1,16 @@
 <html>
 <head>
     <title>Gara | Verify Group</title>
+    <script src="https://cdn.ravenjs.com/3.9.2/raven.min.js"></script>
     <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+
     <script>
+        Raven.config('https://cc8c2799aa1c418bbda7247246da6d43@sentry.io/132567').install();
+
         Parse.initialize("GBTIGT2xXUlBHF8ctBXoyEO7nIL18jvwQNyl3gkD", "C6mXBN3o7axHaqUsWoOQzCX73KdnDYncfVZrjcX8");
         Parse.serverURL = 'https://gara-app.back4app.io';
         var email = getParameterByName('email');
         var token = getParameterByName('token');
-        console.log(email);
-        console.log(token);
         Parse.Cloud.run('verifyGroup', {'email': email, 'token': token}, {
             success: function (result) {
                 $('#response').text(result);
