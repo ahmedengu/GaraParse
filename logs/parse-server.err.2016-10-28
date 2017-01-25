@@ -1,0 +1,1 @@
+{"error":{"code":1,"message":"An appName, publicServerURL, and emailAdapter are required for password reset functionality."},"level":"error","message":"Error handling request: ParseError {\n  code: 1,\n  message: 'An appName, publicServerURL, and emailAdapter are required for password reset functionality.' }","timestamp":"2016-10-28T11:32:19.401Z"}
