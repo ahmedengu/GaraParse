@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html ng-app="App">
+<head>
+    <meta charset="UTF-8">
+    <title>Gara - Login</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+    <script src="https://cdn.ravenjs.com/3.9.2/raven.min.js"></script>
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-sanitize.js"></script>
+    <script type="text/javascript"
+            src="http://maps.google.com/maps/api/js?key=AIzaSyAxlzXskkl3KKdjZUuFrV-j8oFjWOjtTIQ"></script>
+
+    <script>
+        Raven.config('https://cc8c2799aa1c418bbda7247246da6d43@sentry.io/132567').install();
+
+        Parse.initialize("GBTIGT2xXUlBHF8ctBXoyEO7nIL18jvwQNyl3gkD", "C6mXBN3o7axHaqUsWoOQzCX73KdnDYncfVZrjcX8");
+        Parse.serverURL = 'https://gara-app.back4app.io';
+
+        var app = angular.module('App', ['ngSanitize']);
+        app.run(function ($rootScope) {
+            $rootScope.showLogin = true;
+            $rootScope.user = Parse.User.current();
+        });
+        app.controller('loginCtrl', function ($scope, $rootScope) {
+            hideSpinner();
+            $scope.login = function () {
+                showSpinner();
+                Parse.User.logIn($scope.username, $scope.password, {
+                    success: function (user) {
+                        location.reload();
+                    },
+                    error: function (user, error) {
+                        hideSpinner();
+                        alert("Error: " + error.code + " " + error.message);
+                    }
+                });
+            };
+            $scope.reset = function () {
+                var email = prompt("Please enter your name", "");
+                if (email) {
+                    showSpinner();
+                    Parse.User.requestPasswordReset(email, {
+                        success: function () {
+                            hideSpinner();
+                            alert("Check your email");
+                        },
+                        error: function (error) {
+                            hideSpinner();
+                            alert("Error: " + error.code + " " + error.message);
+                        }
+                    });
+                }
+            }
+        });
+        var lat, lng;
+        app.controller('signupCtrl', function ($scope, $rootScope) {
+            hideSpinner();
+            $scope.signup = function () {
+                if (lat == null || lng == null) {
+                    alert("Please choose a location");
+                    return;
+                }
+                showSpinner();
+                var GroupClass = Parse.Object.extend("Group");
+                var query = new Parse.Query(GroupClass);
+                query.equalTo("domain", $scope.group);
+                query.find({
+                    success: function (results) {
+                        if (results.length > 0) {
+                            var user = new Parse.User();
+                            user.set("username", $scope.username);
+                            user.set("password", $scope.password);
+                            user.set("mobile", $scope.mobile);
+                            user.set("email", $scope.email);
+                            user.set("name", $scope.name);
+                            user.set("monitorGroup", results[0]);
+                            user.set("monitorPoint", lat + ',' + lng);
+
+                            var fileUploadControl = $("#profilePic")[0];
+                            if (fileUploadControl.files.length > 0) {
+                                var file = fileUploadControl.files[0];
+                                var name = "photo.jpg";
+
+                                var parseFile = new Parse.File(name, file);
+                                user.set("pic", parseFile);
+                            }
+                            user.signUp(null, {
+                                success: function (user) {
+                                    location.reload();
+                                },
+                                error: function (user, error) {
+                                    hideSpinner();
+                                    alert("Error: " + error.code + " " + error.message);
+                                }
+                            });
+                        } else {
+                            hideSpinner();
+                            alert("Group not found");
+                        }
+                    },
+                    error: function (error) {
+                        hideSpinner();
+                        alert("Error: " + error.code + " " + error.message);
+                    }
+                });
+
+            };
+        });
+
+        app.controller('listCtrl', function ($scope, $rootScope, $sce) {
+            $scope.results = [];
+            $scope.logout = function () {
+                showSpinner();
+                Parse.User.logOut().then(function () {
+                    hideSpinner();
+                    $rootScope.user = Parse.User.current();
+                    $rootScope.$apply();
+                });
+            }
+            if ($rootScope.user == null)
+                return;
+            if (!$rootScope.user.get('monitorPoint') || !$rootScope.user.get('monitorGroup')) {
+                alert("Account not allowed here");
+                return;
+            }
+            var monitorPoint = $rootScope.user.get('monitorPoint').split(',');
+            var Trip = Parse.Object.extend("Trip");
+            var query = new Parse.Query(Trip);
+            query.include('driver');
+            query.include('tripRequests');
+            query.include('car');
+            query.include('tripRequests.user');
+            query.equalTo("groups", $rootScope.user.get('monitorGroup'));
+            query.withinKilometers('to', new Parse.GeoPoint({
+                latitude: parseFloat(monitorPoint[0]),
+                longitude: parseFloat(monitorPoint[1])
+            }), 5);
+            query.equalTo('active', true);
+            showSpinner();
+            query.find({
+                success: function (results) {
+                    console.log(results);
+
+                    for (var i = 0; i < results.length; i++) {
+                        results[i].set('link', 'https://www.google.com/maps/embed/v1/directions?key=AIzaSyAxlzXskkl3KKdjZUuFrV-j8oFjWOjtTIQ&units=metric&mode=driving&origin=' + results[i].get('driver').get('location').latitude + ',' + results[i].get('driver').get('location').longitude + '&destination=' + results[i].get('to').latitude + ',' + results[i].get('to').longitude);
+                    }
+                    $scope.results = results;
+                    $scope.$apply();
+                    hideSpinner();
+                },
+                error: function (error) {
+                    hideSpinner();
+                    alert("Error: " + error.code + " " + error.message);
+                }
+            });
+            $scope.trustSrc = function (src) {
+                return $sce.trustAsResourceUrl(src);
+            }
+        });
+        function hideSpinner() {
+            $('#divLoading').fadeOut(250, function () {
+                $('#divLoading').removeClass('show');
+            });
+        }
+        function showSpinner() {
+            $('#divLoading').fadeIn(250, function () {
+                $('#divLoading').addClass('show');
+            });
+        }
+
+
+        var map;
+        var markersArray = [];
+
+        function initMap() {
+            var latlng = new google.maps.LatLng(31.1586,29.8573);
+            var myOptions = {
+                zoom: 7,
+                center: latlng,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+            map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+            google.maps.event.addListener(map, "click", function (event) {
+                placeMarker(event.latLng);
+                lat = event.latLng.lat();
+                lng = event.latLng.lng();
+            });
+        }
+        function placeMarker(location) {
+            deleteOverlays();
+            var marker = new google.maps.Marker({
+                position: location,
+                map: map
+            });
+            markersArray.push(marker);
+        }
+        function deleteOverlays() {
+            if (markersArray) {
+                for (i in markersArray) {
+                    markersArray[i].setMap(null);
+                }
+                markersArray.length = 0;
+            }
+        }
+    </script>
+    <style>
+        #divLoading.show {
+            display: block;
+            position: fixed;
+            z-index: 9999;
+            opacity: 0.9;
+            background: #ffffff url('https://raw.githubusercontent.com/ahmedengu/ebank-enb/master/spinner.gif') no-repeat center;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            top: 0;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1 0 auto;
+        }
+
+        body {
+            background: #fff;
+        }
+
+        .input-field input[type=date]:focus + label,
+        .input-field input[type=text]:focus + label,
+        .input-field input[type=email]:focus + label,
+        .input-field input[type=password]:focus + label {
+            color: #e91e63;
+        }
+
+        .input-field input[type=date]:focus,
+        .input-field input[type=text]:focus,
+        .input-field input[type=email]:focus,
+        .input-field input[type=password]:focus {
+            border-bottom: 2px solid #e91e63;
+            box-shadow: none;
+        }
+
+        #map_canvas {
+            height: 400px;
+            width: 300px
+        }
+
+    </style>
+</head>
+
+<body onload="initMap()">
+<div id="divLoading" class="show"></div>
+
+<div class="section"></div>
+<main>
+    <center>
+        <img class="responsive-img" style="width: 250px;" src="http://www.g-ara.com/assets/images/logo.png"/>
+        <div class="section"></div>
+
+        <div class="section"></div>
+
+        <div class="container">
+            <div ng-show="user==null" class="z-depth-1 grey lighten-4 row"
+                 style="display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE;">
+
+                <form class="col s12" ng-controller="loginCtrl" ng-submit="login()"
+                      ng-show="showLogin && user==null">
+                    <div class='row'>
+                        <div class='col s12'>
+                        </div>
+                    </div>
+
+                    <div class='row'>
+                        <div class='input-field col s12'>
+                            <input class='validate' type='text' name='username' id='usernameLogin' ng-model="username"/>
+                            <label for='usernameLogin'>Username</label>
+                        </div>
+                    </div>
+
+                    <div class='row'>
+                        <div class='input-field col s12'>
+                            <input class='validate' type='password' name='password' id='passwordLogin'
+                                   ng-model="password"/>
+                            <label for='passwordLogin'>Password</label>
+                        </div>
+                        <label style='float: right;'>
+                            <a class='pink-text' href='#!' ng-click="reset()"><b>Forgot Password?</b></a>
+                        </label>
+                    </div>
+
+                    <br/>
+                    <center>
+                        <div class='row'>
+                            <button type='submit' name='btn_login' class='col s12 btn btn-large waves-effect indigo'>
+                                Login
+                            </button>
+                        </div>
+                    </center>
+                </form>
+
+                <form class="col s12" ng-controller="signupCtrl" ng-submit="signup()"
+                      ng-show="!showLogin && user==null">
+                    <div class='row'>
+                        <div class='col s12'>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class="file-field input-field">
+                            <div class="btn">
+                                <span>File</span>
+                                <input type="file" id="profilePic">
+                            </div>
+                            <div class="file-path-wrapper">
+                                <input class="file-path validate" type="text" placeholder="Upload one image">
+                            </div>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='input-field col s12'>
+                            <input class='validate' type='text' name='name' id='nameSignup' ng-model="name"/>
+                            <label for='nameSignup'>Name</label>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='input-field col s12'>
+                            <input class='validate' type='text' name='username' id='usernameSignup'
+                                   ng-model="username"/>
+                            <label for='usernameSignup'>Username</label>
+                        </div>
+                    </div>
+
+                    <div class='row'>
+                        <div class='input-field col s12'>
+                            <input class='validate' type='email' name='username' id='emailSignup' ng-model="email"/>
+                            <label for='emailSignup'>Email</label>
+                        </div>
+                    </div>
+
+                    <div class='row'>
+                        <div class='input-field col s12'>
+                            <input class='validate' type='password' name='password' id='passwordSignup'
+                                   ng-model="password"/>
+                            <label for='passwordSignup'>Password</label>
+                        </div>
+                    </div>
+
+                    <div class='row'>
+                        <div class='input-field col s12'>
+                            <input class='validate' type='text' name='mobile' id='mobileSignup' ng-model="mobile"/>
+                            <label for='mobileSignup'>Mobile</label>
+                        </div>
+                    </div>
+
+                            <label>Geopoint</label>
+                            <div id="map_canvas"></div>
+
+                    <div class='row'>
+                        <div class='input-field col s12'>
+                            <input class='validate' type='text' name='group' id='groupSignup' ng-model="group"/>
+                            <label for='groupSignup'>Group</label>
+                        </div>
+                    </div>
+                    <br/>
+                    <center>
+                        <div class='row'>
+                            <button type='submit' name='btn_signup' class='col s12 btn btn-large waves-effect indigo'>
+                                Signup
+                            </button>
+                        </div>
+                    </center>
+                </form>
+            </div>
+            <div class="col s12" ng-controller="listCtrl" ng-show="user!=null">
+                <div class="card hoverable" ng-repeat="result in results">
+                    <div class="card-image waves-effect waves-block waves-light">
+                        <iframe class="activator" ng-src="{{trustSrc(result.get('link'))}}"
+
+                                frameborder="0" style="border:0;width: 100%;height: 100%" allowfullscreen=""></iframe>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-title activator grey-text text-darken-4">
+                                  <div class="col s12 m8 offset-m2 l6 offset-l3">
+          <div class="row valign-wrapper">
+            <div class="col s2">
+              <img ng-src="{{result.get('driver').get('pic').url()}}" alt="" class="circle responsive-img">
+            </div>
+            <div class="col s10">
+              <span class="card-title activator grey-text text-darken-4">
+{{result.get('driver').get('username')}} / {{result.get('driver').get('name')}}</span>
+
+<p align="center">
+    <div ng-repeat="pic in result.get('car').get('pics')">
+            <div class="col s2">
+              <img ng-src="{{pic.url()}}" alt="" class="circle responsive-img">
+            </div>
+                </div>
+                </p>
+          </div>
+        </div>
+        </div>
+                            <i
+                                    class="material-icons right">more_vert</i></span>
+                        <p>Passengers: {{(result.get('tripRequests'))?result.get('tripRequests').length:'0'}}</p>
+                    </div>
+                    <div class="card-reveal">
+                        <span class="card-title grey-text text-darken-4">Passengers<i
+                                class="material-icons right">close</i></span>
+
+                        <div ng-repeat="tr in result.get('tripRequests')" class="col s12 m8 offset-m2 l6 offset-l3">
+                            <div class="card-panel grey lighten-5 z-depth-1">
+                                <div class="row valign-wrapper">
+                                    <div class="col s2">
+                                        <img ng-src="{{tr.get('user').get('pic').url()}}" alt=""
+                                             class="circle responsive-img">
+                                    </div>
+                                    <div class="col s10">
+              <span class="black-text">
+{{tr.get('user').get('username')}} / {{tr.get('user').get('name')}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <center>
+                    <div class='row'>
+                        <button class='col s12 btn btn-large waves-effect indigo' ng-click="logout()">
+                            Logout
+                        </button>
+                    </div>
+                </center>
+            </div>
+
+        </div>
+        <a ng-show="user==null" ng-click="showLogin=!showLogin">{{(showLogin)?'Create account':'Login'}}</a>
+    </center>
+
+    <div class="section"></div>
+    <div class="section"></div>
+</main>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-80287405-2', 'auto');
+    ga('send', 'pageview');
+
+</script>
+</body>
+
+</html>
