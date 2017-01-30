@@ -24,6 +24,11 @@
         app.run(function ($rootScope) {
             $rootScope.showLogin = true;
             $rootScope.user = Parse.User.current();
+            $rootScope.switchCtrl = function () {
+                $rootScope.showLogin = !$rootScope.showLogin;
+                if (!$rootScope.showLogin)
+                    initMap();
+            }
         });
         app.controller('loginCtrl', function ($scope, $rootScope) {
             hideSpinner();
@@ -115,7 +120,6 @@
             $scope.results = [];
             $scope.logout = function () {
                 showSpinner();
-                initMap();
                 Parse.User.logOut().then(function () {
                     hideSpinner();
                     $rootScope.user = Parse.User.current();
@@ -208,8 +212,6 @@
             }
         }
 
-        if (!Parse.User.current())
-            initMap();
     </script>
     <style>
         #divLoading.show {
@@ -400,7 +402,9 @@
             <div class="col s10">
               <span class="card-title activator grey-text text-darken-4">
 {{result.get('driver').get('username')}} / {{result.get('driver').get('name')}}</span>
-
+<p>
+    Car Plate Number: {{result.get('car').get('plateNumber')}}
+</p>
 <p align="center">
     <div ng-repeat="pic in result.get('car').get('pics')">
             <div class="col s2">
@@ -445,7 +449,7 @@
             </div>
 
         </div>
-        <a ng-show="user==null" ng-click="showLogin=!showLogin">{{(showLogin)?'Create account':'Login'}}</a>
+        <a ng-show="showLogin" ng-click="switchCtrl()">{{(showLogin)?'Create account':'Login'}}</a>
     </center>
 
     <div class="section"></div>
