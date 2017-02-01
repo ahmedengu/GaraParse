@@ -146,22 +146,35 @@
             }), 500);
             query.equalTo('active', true);
             showSpinner();
-            query.find({
-                success: function (results) {
-                    console.log(results);
+            function findQuery() {
+                query.find({
+                    success: function (results) {
+                        console.log(results);
 
-                    for (var i = 0; i < results.length; i++) {
-                        results[i].set('link', 'https://www.google.com/maps/embed/v1/directions?key=AIzaSyAxlzXskkl3KKdjZUuFrV-j8oFjWOjtTIQ&units=metric&mode=driving&origin=' + results[i].get('driver').get('location').latitude + ',' + results[i].get('driver').get('location').longitude + '&destination=' + results[i].get('to').latitude + ',' + results[i].get('to').longitude);
+                        for (var i = 0; i < results.length; i++) {
+                            results[i].set('link', 'https://www.google.com/maps/embed/v1/directions?key=AIzaSyAxlzXskkl3KKdjZUuFrV-j8oFjWOjtTIQ&units=metric&mode=driving&origin=' + results[i].get('driver').get('location').latitude + ',' + results[i].get('driver').get('location').longitude + '&destination=' + results[i].get('to').latitude + ',' + results[i].get('to').longitude);
+                        }
+                        $scope.results = results;
+                        $scope.$apply();
+                        hideSpinner();
+                    },
+                    error: function (error) {
+                        hideSpinner();
+                        alert("Error: " + error.code + " " + error.message);
                     }
-                    $scope.results = results;
-                    $scope.$apply();
-                    hideSpinner();
-                },
-                error: function (error) {
-                    hideSpinner();
-                    alert("Error: " + error.code + " " + error.message);
-                }
+                });
+            }
+
+            findQuery();
+            var subscription = query.subscribe();
+
+            subscription.on('create', (object) => {
+                findQuery();
             });
+            subscription.on('update', (object) => {
+                findQuery();
+            });
+
             $scope.trustSrc = function (src) {
                 return $sce.trustAsResourceUrl(src);
             }
