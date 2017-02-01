@@ -2,7 +2,7 @@
 <html ng-app="App">
 <head>
     <meta charset="UTF-8">
-    <title>Gara - Login</title>
+    <title>Gara - Monitor</title>
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" type="text/css"
@@ -138,7 +138,9 @@
             query.include('driver');
             query.include('tripRequests');
             query.include('car');
+            query.include('groupUser');
             query.include('tripRequests.user');
+            query.include('tripRequests.groupUser');
             query.equalTo("groups", $rootScope.user.get('monitorGroup'));
             query.withinKilometers('to', new Parse.GeoPoint({
                 latitude: parseFloat(monitorPoint[0]),
@@ -190,6 +192,25 @@
             });
             $scope.trustSrc = function (src) {
                 return $sce.trustAsResourceUrl(src);
+            }
+
+            $scope.groupInfo = function (groupUser) {
+                for (var i = 0; i < groupUser.length; i++) {
+                    if (groupUser[i].objectId == $rootScope.user.get('monitorGroup').objectId) {
+                        return groupUser[i].get('email') + ' - ' + groupUser[i].get('info');
+                    }
+                }
+                return '';
+            }
+
+            $scope.getPassengers = function (requests) {
+                if (!requests)return '0';
+                var count = 0;
+                for (var i = 0; i < requests.length; i++) {
+                    if (requests[i].get('active'))
+                        count++;
+                }
+                return count;
             }
         });
         function hideSpinner() {
@@ -429,7 +450,9 @@
               <span class="card-title activator grey-text text-darken-4">
 {{result.get('driver').get('username')}} / {{result.get('driver').get('name')}}</span>
 <p>
-    Car Plate Number: {{result.get('car').get('plateNumber')}}
+    Car Plate Number: {{result.get('car').get('plateNumber')}} /
+        Group Info: {{groupInfo(result.get('groupUser'))}}
+
 </p>
 <p align="center">
     <div ng-repeat="pic in result.get('car').get('pics')">
@@ -443,7 +466,7 @@
         </div>
                             <i
                                     class="material-icons right">more_vert</i></span>
-                        <p>Passengers: {{(result.get('tripRequests'))?result.get('tripRequests').length:'0'}}</p>
+                        <p>Passengers: {{getPassengers(result.get('tripRequests'))}}</p>
                     </div>
                     <div class="card-reveal">
                         <span class="card-title grey-text text-darken-4">Passengers<i
@@ -459,6 +482,7 @@
                                     <div class="col s10">
               <span class="black-text">
 {{tr.get('user').get('username')}} / {{tr.get('user').get('name')}}</span>
+                                        <p>Group Info: {{groupInfo(tr.get('groupUser'))}}</p>
                                     </div>
                                 </div>
                             </div>
