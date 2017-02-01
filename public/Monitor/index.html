@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Gara - Monitor</title>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=no">
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" type="text/css"
@@ -33,6 +35,9 @@
         app.controller('loginCtrl', function ($scope, $rootScope) {
             hideSpinner();
             $scope.login = function () {
+                if (!$scope.username || !$scope.username.length || !$scope.password || !$scope.password.length) {
+                    return;
+                }
                 showSpinner();
                 Parse.User.logIn($scope.username, $scope.password, {
                     success: function (user) {
@@ -175,19 +180,19 @@
             liveQ.equalTo('active', true);
             var subscription = liveQ.subscribe();
 
-            subscription.on('create', (object) => {
+            subscription.on('create', function () {
                 findQuery();
             });
-            subscription.on('leave', (object) => {
+            subscription.on('leave', function () {
                 findQuery();
             });
-            subscription.on('update', (object) => {
+            subscription.on('update', function () {
                 findQuery();
             });
-            subscription.on('enter', (object) => {
+            subscription.on('enter', function () {
                 findQuery();
             });
-            subscription.on('delete', (object) => {
+            subscription.on('delete', function () {
                 findQuery();
             });
             $scope.trustSrc = function (src) {
@@ -261,6 +266,28 @@
 
     </script>
     <style>
+        @-ms-viewport {
+            width: 100vw ;
+            min-zoom: 100% ;
+            zoom: 100% ;
+        }
+
+        @viewport {
+            width: 100vw ;
+            min-zoom: 100%;
+            zoom: 100% ;
+        }
+
+        @-ms-viewport {
+            user-zoom: fixed ;
+            min-zoom: 100% ;
+        }
+
+        @viewport {
+            user-zoom: fixed ;
+            min-zoom: 100% ;
+        }
+
         #divLoading.show {
             display: block;
             position: fixed;
