@@ -149,8 +149,6 @@
             function findQuery() {
                 query.find({
                     success: function (results) {
-                        console.log(results);
-
                         for (var i = 0; i < results.length; i++) {
                             results[i].set('link', 'https://www.google.com/maps/embed/v1/directions?key=AIzaSyAxlzXskkl3KKdjZUuFrV-j8oFjWOjtTIQ&units=metric&mode=driving&origin=' + results[i].get('driver').get('location').latitude + ',' + results[i].get('driver').get('location').longitude + '&destination=' + results[i].get('to').latitude + ',' + results[i].get('to').longitude);
                         }
@@ -166,15 +164,30 @@
             }
 
             findQuery();
-            var subscription = query.subscribe();
+
+            var liveQ = new Parse.Query(Trip);
+            liveQ.withinKilometers('to', new Parse.GeoPoint({
+                latitude: parseFloat(monitorPoint[0]),
+                longitude: parseFloat(monitorPoint[1])
+            }), 500);
+            liveQ.equalTo('active', true);
+            var subscription = liveQ.subscribe();
 
             subscription.on('create', (object) => {
+                findQuery();
+            });
+            subscription.on('leave', (object) => {
                 findQuery();
             });
             subscription.on('update', (object) => {
                 findQuery();
             });
-
+            subscription.on('enter', (object) => {
+                findQuery();
+            });
+            subscription.on('delete', (object) => {
+                findQuery();
+            });
             $scope.trustSrc = function (src) {
                 return $sce.trustAsResourceUrl(src);
             }
