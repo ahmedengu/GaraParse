@@ -50,7 +50,7 @@
                 });
             };
             $scope.reset = function () {
-                var email = prompt("Please enter your name", "");
+                var email = prompt("Please enter your email", "");
                 if (email) {
                     showSpinner();
                     Parse.User.requestPasswordReset(email, {
